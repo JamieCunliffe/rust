@@ -1,9 +1,11 @@
 // only-aarch64
-// compile-flags: -C target-feature=+neon
+// compile-flags: -A incomplete-features -C target-feature=+neon,+sve
 
-#![feature(repr_simd, stdsimd, asm_const)]
+#![feature(repr_simd, stdarch_aarch64_sve, stdsimd, asm_const, unsized_locals, unsized_fn_params)]
 
 use std::arch::aarch64::float64x2_t;
+use std::arch::aarch64::sve::svfloat64_t;
+use std::arch::aarch64::sve::svdup_n_f64;
 use std::arch::{asm, global_asm};
 
 #[repr(simd)]
@@ -13,6 +15,7 @@ struct Simd256bit(f64, f64, f64, f64);
 fn main() {
     let f64x2: float64x2_t = unsafe { std::mem::transmute(0i128) };
     let f64x4 = Simd256bit(0.0, 0.0, 0.0, 0.0);
+    let f64xN: svfloat64_t = svdup_n_f64(0.0);
 
     unsafe {
         // Types must be listed in the register class.
@@ -34,13 +37,24 @@ fn main() {
         asm!("{:q}", in(vreg) f64x2);
         asm!("{:v}", in(vreg) f64x2);
 
+        asm!("{:h}", in(zreg) 0u16);
+        asm!("{:s}", in(zreg) 0u32);
+        asm!("{:s}", in(zreg) 0f32);
+        asm!("{:d}", in(zreg) 0u64);
+        asm!("{:d}", in(zreg) 0f64);
+        asm!("{:q}", in(zreg) f64xN);
+        asm!("{:z}", in(zreg) f64xN);
+
         // Should be the same as vreg
         asm!("{:q}", in(vreg_low16) f64x2);
+        asm!("{}", in(zreg_low8) f64xN);
+        asm!("{}", in(zreg_low16) f64xN);
 
         // Template modifiers of a different size to the argument are fine
         asm!("{:w}", in(reg) 0u64);
         asm!("{:x}", in(reg) 0u32);
         asm!("{:b}", in(vreg) 0u64);
+        asm!("{:b}", in(zreg) 0u64);
         asm!("{:d}", in(vreg_low16) f64x2);
 
         // Template modifier suggestions for sub-registers
@@ -61,6 +75,13 @@ fn main() {
         asm!("{}", in(vreg) 0f64);
         //~^ WARN formatting may not be suitable for sub-register argument
         asm!("{}", in(vreg_low16) 0f64);
+        //~^ WARN formatting may not be suitable for sub-register argument
+
+        asm!("{}", in(zreg) 0i16);
+        //~^ WARN formatting may not be suitable for sub-register argument
+        asm!("{}", in(zreg) 0f32);
+        //~^ WARN formatting may not be suitable for sub-register argument
+        asm!("{}", in(zreg) 0f64);
         //~^ WARN formatting may not be suitable for sub-register argument
 
         asm!("{0} {0}", in(reg) 0i16);

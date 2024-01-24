@@ -1,17 +1,17 @@
 error: invalid register class `foo`: unknown register class
-  --> $DIR/bad-reg.rs:14:20
+  --> $DIR/bad-reg.rs:21:20
    |
 LL |         asm!("{}", in(foo) foo);
    |                    ^^^^^^^^^^^
 
 error: invalid register `foo`: unknown register
-  --> $DIR/bad-reg.rs:16:18
+  --> $DIR/bad-reg.rs:23:18
    |
 LL |         asm!("", in("foo") foo);
    |                  ^^^^^^^^^^^^^
 
 error: invalid asm template modifier for this register class
-  --> $DIR/bad-reg.rs:18:15
+  --> $DIR/bad-reg.rs:25:15
    |
 LL |         asm!("{:z}", in(reg) foo);
    |               ^^^^   ----------- argument
@@ -21,7 +21,7 @@ LL |         asm!("{:z}", in(reg) foo);
    = note: the `reg` register class supports the following template modifiers: `w`, `x`
 
 error: invalid asm template modifier for this register class
-  --> $DIR/bad-reg.rs:20:15
+  --> $DIR/bad-reg.rs:27:15
    |
 LL |         asm!("{:r}", in(vreg) foo);
    |               ^^^^   ------------ argument
@@ -31,7 +31,7 @@ LL |         asm!("{:r}", in(vreg) foo);
    = note: the `vreg` register class supports the following template modifiers: `b`, `h`, `s`, `d`, `q`, `v`
 
 error: invalid asm template modifier for this register class
-  --> $DIR/bad-reg.rs:22:15
+  --> $DIR/bad-reg.rs:29:15
    |
 LL |         asm!("{:r}", in(vreg_low16) foo);
    |               ^^^^   ------------------ argument
@@ -40,8 +40,18 @@ LL |         asm!("{:r}", in(vreg_low16) foo);
    |
    = note: the `vreg_low16` register class supports the following template modifiers: `b`, `h`, `s`, `d`, `q`, `v`
 
+error: invalid asm template modifier for this register class
+  --> $DIR/bad-reg.rs:31:15
+   |
+LL |         asm!("{:v}", in(zreg) foo);
+   |               ^^^^   ------------ argument
+   |               |
+   |               template modifier
+   |
+   = note: the `zreg` register class supports the following template modifiers: `b`, `h`, `s`, `d`, `q`, `z`
+
 error: asm template modifiers are not allowed for `const` arguments
-  --> $DIR/bad-reg.rs:24:15
+  --> $DIR/bad-reg.rs:33:15
    |
 LL |         asm!("{:a}", const 0);
    |               ^^^^   ------- argument
@@ -49,7 +59,7 @@ LL |         asm!("{:a}", const 0);
    |               template modifier
 
 error: asm template modifiers are not allowed for `sym` arguments
-  --> $DIR/bad-reg.rs:26:15
+  --> $DIR/bad-reg.rs:35:15
    |
 LL |         asm!("{:a}", sym main);
    |               ^^^^   -------- argument
@@ -57,49 +67,49 @@ LL |         asm!("{:a}", sym main);
    |               template modifier
 
 error: invalid register `x29`: the frame pointer cannot be used as an operand for inline asm
-  --> $DIR/bad-reg.rs:28:18
+  --> $DIR/bad-reg.rs:37:18
    |
 LL |         asm!("", in("x29") foo);
    |                  ^^^^^^^^^^^^^
 
 error: invalid register `sp`: the stack pointer cannot be used as an operand for inline asm
-  --> $DIR/bad-reg.rs:30:18
+  --> $DIR/bad-reg.rs:39:18
    |
 LL |         asm!("", in("sp") foo);
    |                  ^^^^^^^^^^^^
 
 error: invalid register `xzr`: the zero register cannot be used as an operand for inline asm
-  --> $DIR/bad-reg.rs:32:18
+  --> $DIR/bad-reg.rs:41:18
    |
 LL |         asm!("", in("xzr") foo);
    |                  ^^^^^^^^^^^^^
 
 error: invalid register `x19`: x19 is used internally by LLVM and cannot be used as an operand for inline asm
-  --> $DIR/bad-reg.rs:34:18
+  --> $DIR/bad-reg.rs:43:18
    |
 LL |         asm!("", in("x19") foo);
    |                  ^^^^^^^^^^^^^
 
-error: register class `preg` can only be used as a clobber, not as an input or output
-  --> $DIR/bad-reg.rs:37:18
+error: register class `ffr_reg` can only be used as a clobber, not as an input or output
+  --> $DIR/bad-reg.rs:51:18
    |
-LL |         asm!("", in("p0") foo);
-   |                  ^^^^^^^^^^^^
+LL |         asm!("", in("ffr") foo);
+   |                  ^^^^^^^^^^^^^
 
-error: register class `preg` can only be used as a clobber, not as an input or output
-  --> $DIR/bad-reg.rs:41:20
+error: register class `ffr_reg` can only be used as a clobber, not as an input or output
+  --> $DIR/bad-reg.rs:55:20
    |
-LL |         asm!("{}", in(preg) foo);
-   |                    ^^^^^^^^^^^^
+LL |         asm!("{}", in(ffr_reg) foo);
+   |                    ^^^^^^^^^^^^^^^
 
-error: register class `preg` can only be used as a clobber, not as an input or output
-  --> $DIR/bad-reg.rs:44:20
+error: register class `ffr_reg` can only be used as a clobber, not as an input or output
+  --> $DIR/bad-reg.rs:58:20
    |
-LL |         asm!("{}", out(preg) _);
-   |                    ^^^^^^^^^^^
+LL |         asm!("{}", out(ffr_reg) _);
+   |                    ^^^^^^^^^^^^^^
 
 error: register `x0` conflicts with register `x0`
-  --> $DIR/bad-reg.rs:50:32
+  --> $DIR/bad-reg.rs:64:32
    |
 LL |         asm!("", in("x0") foo, in("w0") bar);
    |                  ------------  ^^^^^^^^^^^^ register `x0`
@@ -107,7 +117,7 @@ LL |         asm!("", in("x0") foo, in("w0") bar);
    |                  register `x0`
 
 error: register `x0` conflicts with register `x0`
-  --> $DIR/bad-reg.rs:52:32
+  --> $DIR/bad-reg.rs:66:32
    |
 LL |         asm!("", in("x0") foo, out("x0") bar);
    |                  ------------  ^^^^^^^^^^^^^ register `x0`
@@ -115,13 +125,13 @@ LL |         asm!("", in("x0") foo, out("x0") bar);
    |                  register `x0`
    |
 help: use `lateout` instead of `out` to avoid conflict
-  --> $DIR/bad-reg.rs:52:18
+  --> $DIR/bad-reg.rs:66:18
    |
 LL |         asm!("", in("x0") foo, out("x0") bar);
    |                  ^^^^^^^^^^^^
 
 error: register `v0` conflicts with register `v0`
-  --> $DIR/bad-reg.rs:55:32
+  --> $DIR/bad-reg.rs:69:32
    |
 LL |         asm!("", in("v0") foo, in("q0") bar);
    |                  ------------  ^^^^^^^^^^^^ register `v0`
@@ -129,7 +139,7 @@ LL |         asm!("", in("v0") foo, in("q0") bar);
    |                  register `v0`
 
 error: register `v0` conflicts with register `v0`
-  --> $DIR/bad-reg.rs:57:32
+  --> $DIR/bad-reg.rs:71:32
    |
 LL |         asm!("", in("v0") foo, out("q0") bar);
    |                  ------------  ^^^^^^^^^^^^^ register `v0`
@@ -137,26 +147,66 @@ LL |         asm!("", in("v0") foo, out("q0") bar);
    |                  register `v0`
    |
 help: use `lateout` instead of `out` to avoid conflict
-  --> $DIR/bad-reg.rs:57:18
+  --> $DIR/bad-reg.rs:71:18
    |
 LL |         asm!("", in("v0") foo, out("q0") bar);
    |                  ^^^^^^^^^^^^
 
-error: type `i32` cannot be used with this register class
-  --> $DIR/bad-reg.rs:37:27
+error: register `z0` conflicts with register `v0`
+  --> $DIR/bad-reg.rs:74:32
    |
-LL |         asm!("", in("p0") foo);
-   |                           ^^^
+LL |         asm!("", in("v0") foo, in("z0") bar);
+   |                  ------------  ^^^^^^^^^^^^ register `z0`
+   |                  |
+   |                  register `v0`
+
+error: register `z0` conflicts with register `v0`
+  --> $DIR/bad-reg.rs:76:32
    |
-   = note: register class `preg` supports these types: 
+LL |         asm!("", in("v0") foo, out("z0") bar);
+   |                  ------------  ^^^^^^^^^^^^^ register `z0`
+   |                  |
+   |                  register `v0`
+   |
+help: use `lateout` instead of `out` to avoid conflict
+  --> $DIR/bad-reg.rs:76:18
+   |
+LL |         asm!("", in("v0") foo, out("z0") bar);
+   |                  ^^^^^^^^^^^^
+
+error: type `float64x2_t` cannot be used with this register class
+  --> $DIR/bad-reg.rs:46:29
+   |
+LL |         asm!("{}", in(zreg) f64x2);
+   |                             ^^^^^
+   |
+   = note: register class `zreg` supports these types: i16, i32, i64, f32, f64, i8x16xN, i16x8xN, i32x4xN, i64x2xN, f32x4xN, f64x2xN
+   = help: consider using the `vreg` register class instead
+
+error: type `svfloat64_t` cannot be used with this register class
+  --> $DIR/bad-reg.rs:48:29
+   |
+LL |         asm!("{}", in(vreg) f64xN);
+   |                             ^^^^^
+   |
+   = note: register class `vreg` supports these types: i8, i16, i32, i64, f32, f64, i8x8, i16x4, i32x2, i64x1, f32x2, f64x1, i8x16, i16x8, i32x4, i64x2, f32x4, f64x2
+   = help: consider using the `zreg` register class instead
 
 error: type `i32` cannot be used with this register class
-  --> $DIR/bad-reg.rs:41:29
+  --> $DIR/bad-reg.rs:51:28
    |
-LL |         asm!("{}", in(preg) foo);
-   |                             ^^^
+LL |         asm!("", in("ffr") foo);
+   |                            ^^^
    |
-   = note: register class `preg` supports these types: 
+   = note: register class `ffr_reg` supports these types: 
 
-error: aborting due to 20 previous errors
+error: type `i32` cannot be used with this register class
+  --> $DIR/bad-reg.rs:55:32
+   |
+LL |         asm!("{}", in(ffr_reg) foo);
+   |                                ^^^
+   |
+   = note: register class `ffr_reg` supports these types: 
+
+error: aborting due to 25 previous errors
 

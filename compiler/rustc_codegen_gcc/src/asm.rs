@@ -571,6 +571,13 @@ fn reg_to_gcc(reg: InlineAsmRegOrRegClass) -> ConstraintOrRegister {
             InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg) => {
                 unreachable!("clobber-only")
             }
+            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg)
+            | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low16)
+            | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low8)
+            | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg_low8)
+            | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::ffr_reg) => {
+                unimplemented()
+            },
             InlineAsmRegClass::Arm(ArmInlineAsmRegClass::reg) => "r",
             InlineAsmRegClass::Arm(ArmInlineAsmRegClass::sreg)
             | InlineAsmRegClass::Arm(ArmInlineAsmRegClass::dreg_low16)
@@ -647,9 +654,14 @@ fn reg_to_gcc(reg: InlineAsmRegOrRegClass) -> ConstraintOrRegister {
 fn dummy_output_type<'gcc, 'tcx>(cx: &CodegenCx<'gcc, 'tcx>, reg: InlineAsmRegClass) -> Type<'gcc> {
     match reg {
         InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::reg) => cx.type_i32(),
-        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg) => unimplemented!(),
         InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg)
-        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg_low16) => {
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg_low16)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low16)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low8)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg_low8)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::ffr_reg) => {
             unimplemented!()
         }
         InlineAsmRegClass::Arm(ArmInlineAsmRegClass::reg)=> cx.type_i32(),
@@ -790,6 +802,13 @@ fn modifier_to_gcc(arch: InlineAsmArch, reg: InlineAsmRegClass, modifier: Option
         }
         InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg) => {
             unreachable!("clobber-only")
+        }
+        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low16)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low8)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg_low8)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::ffr_reg) => {
+            unsupported();
         }
         InlineAsmRegClass::Arm(ArmInlineAsmRegClass::reg) => None,
         InlineAsmRegClass::Arm(ArmInlineAsmRegClass::sreg)

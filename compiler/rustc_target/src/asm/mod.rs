@@ -415,7 +415,7 @@ impl InlineAsmReg {
         match self {
             Self::X86(r) => r.overlapping_regs(|r| cb(Self::X86(r))),
             Self::Arm(r) => r.overlapping_regs(|r| cb(Self::Arm(r))),
-            Self::AArch64(_) => cb(self),
+            Self::AArch64(r) => r.overlapping_regs(|r| cb(Self::AArch64(r))),
             Self::RiscV(_) => cb(self),
             Self::PowerPC(r) => r.overlapping_regs(|r| cb(Self::PowerPC(r))),
             Self::Hexagon(r) => r.overlapping_regs(|r| cb(Self::Hexagon(r))),
@@ -702,6 +702,7 @@ pub enum InlineAsmType {
     VecI128(u64),
     VecF32(u64),
     VecF64(u64),
+    VecBool(u64),
 }
 
 impl InlineAsmType {
@@ -725,6 +726,7 @@ impl InlineAsmType {
             Self::VecI128(n) => n * 16,
             Self::VecF32(n) => n * 4,
             Self::VecF64(n) => n * 8,
+            Self::VecBool(n) => n * 1,
         })
     }
 }
@@ -739,6 +741,14 @@ impl fmt::Display for InlineAsmType {
             Self::I128 => f.write_str("i128"),
             Self::F32 => f.write_str("f32"),
             Self::F64 => f.write_str("f64"),
+            Self::VecI8(n) if n == 0 => write!(f, "i8x16xN"),
+            Self::VecI16(n) if n == 0 => write!(f, "i16x8xN"),
+            Self::VecI32(n) if n == 0 => write!(f, "i32x4xN"),
+            Self::VecI64(n) if n == 0 => write!(f, "i64x2xN"),
+            Self::VecI128(n) if n == 0 => write!(f, "i128x1xN"),
+            Self::VecF32(n) if n == 0 => write!(f, "f32x4xN"),
+            Self::VecF64(n) if n == 0 => write!(f, "f64x2xN"),
+            Self::VecBool(n) if n == 0 => write!(f, "boolx16xN"),
             Self::VecI8(n) => write!(f, "i8x{n}"),
             Self::VecI16(n) => write!(f, "i16x{n}"),
             Self::VecI32(n) => write!(f, "i32x{n}"),
@@ -746,6 +756,7 @@ impl fmt::Display for InlineAsmType {
             Self::VecI128(n) => write!(f, "i128x{n}"),
             Self::VecF32(n) => write!(f, "f32x{n}"),
             Self::VecF64(n) => write!(f, "f64x{n}"),
+            Self::VecBool(n) => write!(f, "boolx{n}"),
         }
     }
 }

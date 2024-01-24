@@ -773,6 +773,7 @@ symbols! {
         ffi_const,
         ffi_pure,
         ffi_returns_twice,
+        ffr_reg,
         field,
         field_init_shorthand,
         file,
@@ -1231,6 +1232,7 @@ symbols! {
         prefetch_write_data,
         prefetch_write_instruction,
         preg,
+        preg_low8,
         prelude,
         prelude_import,
         preserves_flags,
@@ -1628,6 +1630,7 @@ symbols! {
         sub_assign,
         sub_with_overflow,
         suggestion,
+        sve,
         sym,
         sync,
         t32,
@@ -1826,6 +1829,9 @@ symbols! {
         yield_expr,
         ymm_reg,
         zmm_reg,
+        zreg,
+        zreg_low16,
+        zreg_low8,
     }
 }
 

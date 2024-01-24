@@ -213,8 +213,12 @@ impl<'ll, 'tcx> AsmBuilderMethods<'tcx> for Builder<'_, 'll, 'tcx> {
         constraints.append(&mut clobbers);
         if !options.contains(InlineAsmOptions::PRESERVES_FLAGS) {
             match asm_arch {
-                InlineAsmArch::AArch64 | InlineAsmArch::Arm => {
+                InlineAsmArch::Arm => {
                     constraints.push("~{cc}".to_string());
+                }
+                InlineAsmArch::AArch64 => {
+                    constraints.push("~{cc}".to_string());
+                    constraints.push("~{ffr}".to_string());
                 }
                 InlineAsmArch::X86 | InlineAsmArch::X86_64 => {
                     constraints.extend_from_slice(&[
@@ -616,6 +620,7 @@ fn reg_to_llvm(reg: InlineAsmRegOrRegClass, layout: Option<&TyAndLayout<'_>>) ->
                         4 => 's',
                         2 => 'h',
                         1 => 'd', // We fixup i8 to i8x8
+                        0 => 'z',
                         _ => unreachable!(),
                     }
                 } else {
@@ -634,9 +639,15 @@ fn reg_to_llvm(reg: InlineAsmRegOrRegClass, layout: Option<&TyAndLayout<'_>>) ->
         // https://llvm.org/docs/LangRef.html#supported-constraint-code-list
         InlineAsmRegOrRegClass::RegClass(reg) => match reg {
             InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::reg) => "r",
-            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg) => "w",
-            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg_low16) => "x",
-            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg) => {
+            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg)
+            | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg) => "w",
+            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg_low16)
+            | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low16) => "x",
+            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low8) => "y",
+            // @3 is required to inform LLVM that the modifier token is 3 characters long
+            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg) => "@3Upa",
+            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg_low8) => "@3Upl",
+            InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::ffr_reg) => {
                 unreachable!("clobber-only")
             }
             InlineAsmRegClass::Arm(ArmInlineAsmRegClass::reg) => "r",
@@ -720,9 +731,14 @@ fn modifier_to_llvm(
         | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg_low16) => {
             if modifier == Some('v') { None } else { modifier }
         }
-        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg) => {
-            unreachable!("clobber-only")
+        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low16)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low8) => {
+            if modifier == Some('z') { None } else { modifier }
         }
+        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg_low8)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::ffr_reg) => None,
         InlineAsmRegClass::Arm(ArmInlineAsmRegClass::reg) => None,
         InlineAsmRegClass::Arm(ArmInlineAsmRegClass::sreg)
         | InlineAsmRegClass::Arm(ArmInlineAsmRegClass::sreg_low16) => None,
@@ -810,7 +826,16 @@ fn dummy_output_type<'ll>(cx: &CodegenCx<'ll, '_>, reg: InlineAsmRegClass) -> &'
         | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::vreg_low16) => {
             cx.type_vector(cx.type_i64(), 2)
         }
-        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg) => {
+        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low16)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::zreg_low8) => {
+            cx.type_scalable_vector(cx.type_i64(), 2)
+        }
+        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg)
+        | InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::preg_low8) => {
+            cx.type_scalable_vector(cx.type_bool(), 16)
+        }
+        InlineAsmRegClass::AArch64(AArch64InlineAsmRegClass::ffr_reg) => {
             unreachable!("clobber-only")
         }
         InlineAsmRegClass::Arm(ArmInlineAsmRegClass::reg) => cx.type_i32(),

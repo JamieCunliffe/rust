@@ -79,6 +79,7 @@ impl<'a, 'tcx> InlineAsmCtxt<'a, 'tcx> {
                             return None;
                         }
                     }
+                    ty::Slice(ty) if adt.repr().scalable() => (0 as u64, *ty),
                     _ => (fields.len() as u64, elem_ty),
                 };
 
@@ -106,6 +107,7 @@ impl<'a, 'tcx> InlineAsmCtxt<'a, 'tcx> {
                     }
                     ty::Float(FloatTy::F32) => Some(InlineAsmType::VecF32(size)),
                     ty::Float(FloatTy::F64) => Some(InlineAsmType::VecF64(size)),
+                    ty::Bool => Some(InlineAsmType::VecBool(size)),
                     _ => None,
                 }
             }

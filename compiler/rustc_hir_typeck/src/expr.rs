@@ -3200,7 +3200,9 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
     fn check_expr_asm_operand(&self, expr: &'tcx hir::Expr<'tcx>, is_input: bool) {
         let needs = if is_input { Needs::None } else { Needs::MutPlace };
         let ty = self.check_expr_with_needs(expr, needs);
-        self.require_type_is_sized(ty, expr.span, traits::InlineAsmSized);
+        if !self.tcx.features().unsized_fn_params {
+            self.require_type_is_sized(ty, expr.span, traits::InlineAsmSized);
+        }
 
         if !is_input && !expr.is_syntactic_place_expr() {
             let mut err = self.tcx.sess.struct_span_err(expr.span, "invalid asm output");
